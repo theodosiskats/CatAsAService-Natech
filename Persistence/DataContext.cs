@@ -15,6 +15,5 @@ public sealed class DataContext(DbContextOptions options) : DbContext(options)
 
         builder.ApplyConfiguration(new CatsConfiguration());
         builder.ApplyConfiguration(new TagsConfiguration());
-
     }
 }

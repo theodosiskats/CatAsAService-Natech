@@ -15,6 +15,8 @@ public class TagsConfiguration : IEntityTypeConfiguration<Tag>
     {
         builder.ToTable("Tags");
         
+        builder.HasIndex(x => x.Name).IsUnique();
+        
         builder
             .HasMany(x => x.Cats)
             .WithMany(y => y.Tags);

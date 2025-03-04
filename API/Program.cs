@@ -4,6 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsDevelopment())
+    builder.Configuration.AddJsonFile(
+        "local.settings.json",
+        optional: true,
+        reloadOnChange: true
+    );
+
 builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
@@ -12,10 +20,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApplicationService(builder);
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContextFactory<DataContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString(builder.Configuration["Local"]) ?? 
-        throw new InvalidOperationException("Connection string not found.")));
+
+builder.Services.AddDbContext<DataContext>(opt =>
+{
+    opt.UseSqlServer(builder.Configuration["RemoteDB"] ?? 
+                     throw new InvalidOperationException("Connection string not found."));
+});
 
 var app = builder.Build();
 

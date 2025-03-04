@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Application.Services;
 using Infrastructure.Clients;
 using Models.InfrastructureModels;
 using Persistence;
@@ -12,9 +13,10 @@ public static class ServiceExtensions
         services.AddCors();
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         
-        services.AddScoped<ICatService>();
+        services.AddScoped<ICatService, CatService>();
+        services.AddScoped<ICatImageStealClient, CatImageStealClient>();
         
-        services.AddSingleton<ICatApiClient>(provider =>
+        services.AddSingleton<ICatApiClient>(_ =>
             new CatApiClient(builder.Configuration["CatApiUrl"]));
         
         services.AddS3Storage(new AmazonS3Settings
@@ -24,7 +26,6 @@ public static class ServiceExtensions
             }
         );
 
-        //Repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
     }
 }
