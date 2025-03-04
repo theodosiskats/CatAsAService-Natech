@@ -5,5 +5,6 @@ namespace Application.Interfaces;
 
 public interface ICatService
 {
+    public Task<List<Cat>> FetchCats();
     public List<Cat> ProcessRawFetchedCats(List<CatApiResponse> catsData);
 }

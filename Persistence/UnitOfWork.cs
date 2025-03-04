@@ -4,7 +4,7 @@ namespace Persistence;
 
 public class UnitOfWork(DataContext context) : IUnitOfWork
 {
-    // public AppointmentsRepository AppointmentsRepository => new(context);
+    // public CatsRepository CatsRepository => new(context);
 
     public async Task<bool> Complete()
     {

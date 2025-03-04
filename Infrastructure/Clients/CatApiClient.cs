@@ -9,13 +9,12 @@ public class CatApiClient(string? apiUrl) : ICatApiClient
     private readonly HttpClient _httpClient = new();
     private string? _apiUrl = apiUrl;
 
-    public async Task<List<CatApiResponse>> FetchRandomCats(int? pageSize = 5)
+    public async Task<List<CatApiResponse>> FetchRandomCats(int? pageSize = 25)
     {
         if (string.IsNullOrEmpty(_apiUrl))
             throw new InvalidOperationException("Cats API Url is not configured.");
         
-        if (pageSize is not null)
-            _apiUrl = $"{_apiUrl}&limit={pageSize}";
+        _apiUrl = $"{_apiUrl}&limit={pageSize}";
 
         try
         {

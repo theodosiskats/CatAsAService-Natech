@@ -13,7 +13,7 @@ public class CatImagesConfiguration : IEntityTypeConfiguration<CatImage>
 
     private void ApplyConfiguration(EntityTypeBuilder<CatImage> builder)
     {
-        builder.ToTable("Cats");
+        builder.ToTable("CatImages");
         
         builder
             .HasOne(x => x.Cat)

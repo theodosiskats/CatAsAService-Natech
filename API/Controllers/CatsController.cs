@@ -7,11 +7,11 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CatsController(IMapper mapper, IUnitOfWork uow) : ControllerBase
+public class CatsController(IMapper mapper, ICatService catService) : ControllerBase
 {
-    // [HttpPost("fetch")]
-    // public async Task<List<CatDto>> Fetch()
-    // {
-    //     
-    // }
+    [HttpPost("fetch")]
+    public async Task<List<CatDto>> Fetch()
+    {
+        var catsData = await 
+    }
 }
