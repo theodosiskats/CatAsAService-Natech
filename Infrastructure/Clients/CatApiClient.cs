@@ -4,17 +4,22 @@ using Models.InfrastructureModels;
 
 namespace Infrastructure.Clients;
 
-public class CatApiClient(string? apiUrl) : ICatApiClient
+public class CatApiClient : ICatApiClient
 {
-    private readonly HttpClient _httpClient = new();
-    private string? _apiUrl = apiUrl;
+    private readonly HttpClient _httpClient;
+    private readonly string? _apiUrl;
+    
+    public CatApiClient(string? apiUrl, string? apiKey)
+    {
+        _apiUrl = apiUrl;
+        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+    }
 
-    public async Task<List<CatApiResponse>> FetchRandomCats(int? pageSize = 25)
+    public async Task<List<CatApiResponse>> FetchRandomCats()
     {
         if (string.IsNullOrEmpty(_apiUrl))
             throw new InvalidOperationException("Cats API Url is not configured.");
-        
-        _apiUrl = $"{_apiUrl}&limit={pageSize}";
 
         try
         {

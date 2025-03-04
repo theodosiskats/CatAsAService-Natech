@@ -4,40 +4,56 @@ using Models.InfrastructureModels;
 
 namespace Application.Services;
 
-public class CatService(ICatApiClient catApiClient, IUnitOfWork uow) : ICatService
+public class CatService(ICatApiClient catApiClient, IUnitOfWork uow, ICatImageStealClient imageStealClient) : ICatService
 {
-    public async Task<List<Cat>> FetchCats()
+    public async Task<List<Cat>?> FetchCats()
     {
         var catData = await catApiClient.FetchRandomCats();
-        var processedCatData = ProcessRawFetchedCats(catData);
+        var parsedCats = await ProcessRawFetchedCats(catData);
+        return await uow.CatsRepository.SaveCatsRangeAndImagesAsync(parsedCats);
     }
 
-    public List<Cat> ProcessRawFetchedCats(List<CatApiResponse> catsData)
+    public async Task<List<Cat>> ProcessRawFetchedCats(List<CatApiResponse> catsData)
     {
         var parsedCats = new List<Cat>();
+
+        // Extract all unique tags from API response
+        var allTags = catsData
+            .SelectMany(cat => cat.Breeds?
+                                   .SelectMany(breed => breed.Temperament?.Split(',', StringSplitOptions.TrimEntries) ?? [])
+                               ?? Array.Empty<string>())
+            .Distinct()
+            .ToList();
+
+        // Fetch existing tags
+        var existingTags = await uow.TagsRepository.GetByNamesAsync(allTags);
+        var existingTagsDict = existingTags.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+
         foreach (var cat in catsData)
         {
-            var newCat = new Cat
-            {
-                CatId = cat.Id,
-            };
+            var newCat = new Cat { CatId = cat.Id };
 
-            var temperamentTraits = cat.Breeds
-                .SelectMany(x => x.Temperament.Split(',', StringSplitOptions.TrimEntries))
+            var tags = cat.Breeds?
+                .SelectMany(breed => breed.Temperament?.Split(',', StringSplitOptions.TrimEntries) ?? [])
+                .Distinct()
                 .ToList();
 
-            foreach (var trait in temperamentTraits)
+            if (tags == null) continue;
+
+            newCat.Tags = tags.Select(trait =>
+                    existingTagsDict.TryGetValue(trait, out var existingTag)
+                        ? existingTag // Use existing tag
+                        : new Tag { Name = trait } // Create new tag
+            ).ToList();
+
+            newCat.Image = new CatImage
             {
-                //check if trait already exists
-                
-                var traitToAdd = await uow.TagsRepository.
-                
-                //if yes, add the existing one,
-                //if no, add to create
-            }
+                Url = cat.Url ?? string.Empty,
+            };
             
+            parsedCats.Add(newCat);
         }
-        
+
         return parsedCats;
     }
 }

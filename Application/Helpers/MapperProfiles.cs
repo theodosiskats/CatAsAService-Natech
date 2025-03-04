@@ -1,6 +1,15 @@
-namespace Application;
+using AutoMapper;
+using Domain.Entities;
+using Models.DTOs;
 
-public class MapperProfiles
+namespace Application.Helpers;
+
+public class MapperProfiles: Profile
 {
-    
+    public MapperProfiles()
+    {
+        CreateMap<Cat, CatDto>();
+        CreateMap<Tag, TagDto>();
+        CreateMap<CatImage, CatImageDto>();
+    }
 }

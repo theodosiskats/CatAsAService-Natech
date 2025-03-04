@@ -8,14 +8,18 @@ namespace Infrastructure.Clients;
 
 public static class AmazonS3Service
 {
+    private static string? _awsAccessKey;
+    private static string? _awsSecretKey;
     private static string? _awsRegion;
-    private static string? _accessPointArn;
+    private static string? _bucketName;
 
     public static void AddS3Storage(this IServiceCollection services, AmazonS3Settings settings)
     {
         // Fetch AWS configuration
+        _awsAccessKey = settings.AwsAccessKey;
+        _awsSecretKey = settings.AwsSecretKey;
         _awsRegion = settings.AwsRegion;
-        _accessPointArn = settings.AccessPointArn;
+        _bucketName = settings.BucketName;
 
         // Configure the AWS SDK for S3
         services.AddSingleton<IAmazonS3>(sp =>
@@ -24,28 +28,39 @@ public static class AmazonS3Service
             {
                 RegionEndpoint = RegionEndpoint.GetBySystemName(_awsRegion)
             };
-            return new AmazonS3Client(config);
+            return new AmazonS3Client(_awsAccessKey, _awsSecretKey, config);
         });
     }
 
     public static async Task<(PutObjectResponse response, string fileUrl)> UploadFileAsync(
         IAmazonS3 s3Client, Stream fileStream, string keyName, string contentType)
     {
-        if (string.IsNullOrEmpty(_accessPointArn))
+        if (string.IsNullOrEmpty(_bucketName))
             throw new InvalidOperationException("Access Point ARN is not configured.");
 
         var putRequest = new PutObjectRequest
         {
-            BucketName = _accessPointArn,
+            BucketName = _bucketName,
             Key = keyName,
             InputStream = fileStream,
             ContentType = contentType
         };
 
-        // Generate correct public file URL format for Access Points
-        var fileUrl = $"https://{_accessPointArn.Replace(":", "-").Replace("/", "-")}.s3-accesspoint.{_awsRegion}.amazonaws.com/{keyName}";
+        var fileUrl = $"https://{_bucketName}.s3.amazonaws.com/cats/{keyName}";
 
         var response = await s3Client.PutObjectAsync(putRequest);
         return (response, fileUrl);
+    }
+    
+    public static async Task<DeleteObjectResponse> DeleteFileAsync(IAmazonS3 s3Client, string keyName)
+    {
+        var deleteRequest = new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = keyName
+        };
+
+        var response = await s3Client.DeleteObjectAsync(deleteRequest);
+        return response;
     }
 }

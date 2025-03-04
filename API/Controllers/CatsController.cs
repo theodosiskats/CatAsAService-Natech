@@ -10,8 +10,17 @@ namespace API.Controllers;
 public class CatsController(IMapper mapper, ICatService catService) : ControllerBase
 {
     [HttpPost("fetch")]
-    public async Task<List<CatDto>> Fetch()
+    public async Task<ActionResult<List<CatDto>>> Fetch()
     {
-        var catsData = await 
+        try
+        {
+            var catsData = await catService.FetchCats();
+            if (catsData == null) return BadRequest("Something went wrong while fetching data");
+            return Ok(mapper.Map<List<CatDto>>(catsData));
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 }

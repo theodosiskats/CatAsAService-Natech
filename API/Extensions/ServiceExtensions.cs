@@ -15,14 +15,17 @@ public static class ServiceExtensions
         
         services.AddScoped<ICatService, CatService>();
         services.AddScoped<ICatImageStealClient, CatImageStealClient>();
+        services.AddScoped<ICatImageService, CatImageService>();
         
         services.AddSingleton<ICatApiClient>(_ =>
-            new CatApiClient(builder.Configuration["CatApiUrl"]));
+            new CatApiClient(builder.Configuration["CatApiUrl"], builder.Configuration["CatApiKey"]));
         
         services.AddS3Storage(new AmazonS3Settings
             {
+                AwsAccessKey = builder.Configuration["AwsAccessKey"],
+                AwsSecretKey = builder.Configuration["AwsSecretKey"],
                 AwsRegion = builder.Configuration["AwsRegion"],
-                AccessPointArn = builder.Configuration["AccessPointArn"],
+                BucketName = builder.Configuration["AwsBucketName"],
             }
         );
 

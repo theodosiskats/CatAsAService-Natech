@@ -1,8 +1,11 @@
+using Application.Interfaces.RepositoryInterfaces;
+
 namespace Application.Interfaces;
 
 public interface IUnitOfWork
 {
-    // AppointmentsRepository AppointmentsRepository { get; }
+    ITagsRepository TagsRepository { get; }
+    ICatsRepository CatsRepository { get;}
 
     Task<bool> Complete();
     bool HasChanges();

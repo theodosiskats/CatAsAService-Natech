@@ -1,8 +1,10 @@
 using Domain.Entities;
 
-namespace Persistence.Repositories.Interfaces;
+namespace Application.Interfaces.RepositoryInterfaces;
 
 public interface ITagsRepository
 {
-    public Task<Tag?> GetByNameAsync(string name);
+    public Task<List<Tag>> GetByNamesAsync(List<string> names);
+
+    public Task AddRangeAsync(List<Tag> tags);
 }

@@ -4,5 +4,5 @@ namespace Application.Interfaces;
 
 public interface ICatApiClient
 {
-    public Task<List<CatApiResponse>> FetchRandomCats(int? pageSize = null);
+    public Task<List<CatApiResponse>> FetchRandomCats();
 }
