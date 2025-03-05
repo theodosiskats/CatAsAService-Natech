@@ -79,7 +79,7 @@ public class CatsRepository(DataContext context, IAmazonS3 s3, ICatImageService 
             query = query.Where(c => c.Tags.Any(t => t.Name == tag));
         }
 
-        // Apply paging
+        // Apply pagination
         return await query
             .Include(x => x.Image)
             .Include(x => x.Tags)

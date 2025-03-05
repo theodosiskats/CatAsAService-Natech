@@ -15,7 +15,7 @@ public static class AmazonS3Service
 
     public static void AddS3Storage(this IServiceCollection services, AmazonS3Settings settings)
     {
-        // Fetch AWS configuration
+        // Assign AWS configuration
         _awsAccessKey = settings.AwsAccessKey;
         _awsSecretKey = settings.AwsSecretKey;
         _awsRegion = settings.AwsRegion;
