@@ -80,6 +80,6 @@ If provided, before running, copy your local.settings.json file into the API pro
 ## 🎯 Conclusion
 This project demonstrates the integration of multiple cloud services and APIs in a single application. While fetching cat images is a simple task, this implementation showcases a structured, scalable, and extensible approach that can be applied to more complex systems.
 
-The execution time of the method fetch, depends on the network speed you have. As 25 images per request is a considerable size, the request may take up to 30 seconds to execute. Yet when we run it on a deployed instance in a high network speed server, the request is done in 15 seconds.
+The execution time of the method fetch, depends on the network speed you have. As 25 images per request is a considerable size, the request may take up to 30 seconds to execute. Yet when we run it on a deployed instance in a high network speed server, the request is done in 10 seconds.
 
 Feel free to reach out if you have any questions! 🚀🐱
