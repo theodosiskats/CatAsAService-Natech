@@ -73,8 +73,10 @@ docker run -p 8080:8080 --name catasaservice catasaservice
 ```
 
 ### 🛠️ Running in Debug Mode
+
 Run the project using your favorite IDE (such as **Visual Studio**, **Rider**, or **VS Code**) in **Debug Mode**.
 If provided, before running, copy your local.settings.json file into the API projects folder.
+
 ---
 
 ## 🎯 Conclusion
