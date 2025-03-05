@@ -4,7 +4,7 @@ using Models.InfrastructureModels;
 
 namespace Application.Services;
 
-public class CatService(ICatApiClient catApiClient, IUnitOfWork uow, ICatImageStealClient imageStealClient) : ICatService
+public class CatService(ICatApiClient catApiClient, IUnitOfWork uow) : ICatService
 {
     public async Task<List<Cat>?> FetchCats()
     {
@@ -15,45 +15,100 @@ public class CatService(ICatApiClient catApiClient, IUnitOfWork uow, ICatImageSt
 
     public async Task<List<Cat>> ProcessRawFetchedCats(List<CatApiResponse> catsData)
     {
-        var parsedCats = new List<Cat>();
+        #region FilterNewCats
+        var allCatsIds = catsData.Select(x => x.Id).ToList();
+        var existingCats = await uow.CatsRepository.GetByIdsAsync(allCatsIds);
+        var existingCatIds = new HashSet<string>(existingCats.Select(ec => ec.CatId));
 
-        // Extract all unique tags from API response
-        var allTags = catsData
+        catsData = catsData
+            .Where(cat => !existingCatIds.Contains(cat.Id))
+            .ToList();
+        #endregion
+
+        #region FilterAndSaveNewTags
+
+        // Gather all unique tag names
+        var allTagNames = catsData
             .SelectMany(cat => cat.Breeds?
-                                   .SelectMany(breed => breed.Temperament?.Split(',', StringSplitOptions.TrimEntries) ?? [])
-                               ?? Array.Empty<string>())
+                   .SelectMany(breed => breed.Temperament?.Split(',', StringSplitOptions.TrimEntries) ?? [])
+               ?? [])
+            .Select(t => t.Trim())
             .Distinct()
             .ToList();
 
-        // Fetch existing tags
-        var existingTags = await uow.TagsRepository.GetByNamesAsync(allTags);
-        var existingTagsDict = existingTags.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        // Fetch existing Tags
+        var existingTags = await uow.TagsRepository.GetByNamesAsync(allTagNames);
+        var existingTagsDict = existingTags
+            .ToDictionary(t => t.Name, t => t, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var cat in catsData)
+        // Find new tag names
+        var newTagNames = allTagNames
+            .Where(name => !existingTagsDict.ContainsKey(name))
+            .ToList();
+
+        // Create list of new tags
+        var newTags = newTagNames
+            .Select(name => new Tag { Name = name })
+            .ToList();
+
+        if (newTags.Count != 0)
         {
-            var newCat = new Cat { CatId = cat.Id };
+            // Add them to the DB
+            await uow.TagsRepository.AddRangeAsync(newTags);
+            await uow.Complete();
+        }
 
-            var tags = cat.Breeds?
-                .SelectMany(breed => breed.Temperament?.Split(',', StringSplitOptions.TrimEntries) ?? [])
+        // Combine existing tags + newly inserted tags
+        var allTags = existingTags
+            .Concat(newTags)
+            .ToDictionary(t => t.Name, t => t, StringComparer.OrdinalIgnoreCase);
+
+        #endregion
+
+        #region MapFetchedCatsToCatEntities
+
+        // Build up the final list of Cat entities, assigning correct Tag references
+        var parsedCats = new List<Cat>();
+
+        foreach (var catData in catsData)
+        {
+            var newCat = new Cat
+            {
+                CatId = catData.Id,
+                Image = new CatImage
+                {
+                    Url = catData.Url ?? string.Empty,
+                    Width = catData.Width ?? 0,
+                    Height = catData.Height ?? 0
+                }
+            };
+
+            // Extract & normalize tags from this cat’s Breeds
+            var tagNames = catData.Breeds?
+                .SelectMany(breed => breed.Temperament?
+                     .Split(',', StringSplitOptions.TrimEntries) 
+                 ?? [])
+                .Select(t => t.Trim()) // same normalization
                 .Distinct()
                 .ToList();
 
-            if (tags == null) continue;
-
-            newCat.Tags = tags.Select(trait =>
-                    existingTagsDict.TryGetValue(trait, out var existingTag)
-                        ? existingTag // Use existing tag
-                        : new Tag { Name = trait } // Create new tag
-            ).ToList();
-
-            newCat.Image = new CatImage
+            // If there are no tags, skip or handle accordingly
+            if (tagNames == null || tagNames.Count == 0)
             {
-                Url = cat.Url ?? string.Empty,
-            };
-            
+                newCat.Tags = [];
+                continue;
+            }
+
+            // Assign the correct Tag entities from our dictionary
+            newCat.Tags = tagNames
+                .Select(tagName => allTags[tagName]) 
+                .ToList();
+
             parsedCats.Add(newCat);
         }
+        #endregion
 
         return parsedCats;
     }
+
 }

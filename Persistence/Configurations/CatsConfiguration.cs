@@ -2,7 +2,7 @@ using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Persistence.EntitiesConfigurations;
+namespace Persistence.Configurations;
 
 public class CatsConfiguration : IEntityTypeConfiguration<Cat>
 {
@@ -20,11 +20,5 @@ public class CatsConfiguration : IEntityTypeConfiguration<Cat>
         builder
             .HasMany(x => x.Tags)
             .WithMany(y => y.Cats);
-
-        builder
-            .HasOne(x => x.Image)
-            .WithOne(y => y.Cat)
-            .HasForeignKey<Cat>(x => x.ImageId)
-            .IsRequired(false);
     }
 }
