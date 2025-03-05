@@ -6,6 +6,11 @@ namespace Application.Services;
 
 public class CatService(ICatApiClient catApiClient, IUnitOfWork uow) : ICatService
 {
+    public async Task<Cat?> GetCatById(int id)
+    {
+        return await uow.CatsRepository.GetByIdAsync(id);
+    }
+
     public async Task<List<Cat>?> FetchCats()
     {
         var catData = await catApiClient.FetchRandomCats();
@@ -88,21 +93,17 @@ public class CatService(ICatApiClient catApiClient, IUnitOfWork uow) : ICatServi
                 .SelectMany(breed => breed.Temperament?
                      .Split(',', StringSplitOptions.TrimEntries) 
                  ?? [])
-                .Select(t => t.Trim()) // same normalization
+                .Select(t => t.Trim()) // normalization
                 .Distinct()
                 .ToList();
 
-            // If there are no tags, skip or handle accordingly
-            if (tagNames == null || tagNames.Count == 0)
-            {
-                newCat.Tags = [];
-                continue;
-            }
-
             // Assign the correct Tag entities from our dictionary
-            newCat.Tags = tagNames
-                .Select(tagName => allTags[tagName]) 
-                .ToList();
+            if (tagNames is not null)
+            {
+                newCat.Tags = tagNames
+                    .Select(tagName => allTags[tagName]) 
+                    .ToList();
+            }
 
             parsedCats.Add(newCat);
         }
@@ -111,4 +112,9 @@ public class CatService(ICatApiClient catApiClient, IUnitOfWork uow) : ICatServi
         return parsedCats;
     }
 
+
+    public async Task<IEnumerable<Cat>> GetCatsAsync(string? tag, int page, int pageSize)
+    {
+        return await uow.CatsRepository.GetCatsAsync(tag, page, pageSize);
+    }
 }

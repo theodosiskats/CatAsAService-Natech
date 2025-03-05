@@ -16,6 +16,8 @@ public static class ServiceExtensions
         services.AddScoped<ICatService, CatService>();
         services.AddScoped<ICatImageStealClient, CatImageStealClient>();
         services.AddScoped<ICatImageService, CatImageService>();
+        services.AddScoped<IImageResizeFunctionClient, ImageResizeFunctionClient>(_ =>
+            new ImageResizeFunctionClient(new HttpClient(), builder.Configuration["ImageCompressFunctionUrl"]));
         
         services.AddSingleton<ICatApiClient>(_ =>
             new CatApiClient(builder.Configuration["CatApiUrl"], builder.Configuration["CatApiKey"]));

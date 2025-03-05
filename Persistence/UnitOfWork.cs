@@ -5,9 +5,9 @@ using Persistence.Repositories;
 
 namespace Persistence;
 
-public class UnitOfWork(DataContext context, IAmazonS3 s3, ICatImageService catImageService) : IUnitOfWork
+public class UnitOfWork(DataContext context, IAmazonS3 s3, ICatImageService catImageService, IImageResizeFunctionClient imageResizeFunctionClient) : IUnitOfWork
 {
-    public ICatsRepository CatsRepository => new CatsRepository(context, s3, catImageService);
+    public ICatsRepository CatsRepository => new CatsRepository(context, s3, catImageService, imageResizeFunctionClient);
     public ITagsRepository TagsRepository => new TagsRepository(context);
 
     public async Task<bool> Complete()

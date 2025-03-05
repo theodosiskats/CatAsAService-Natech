@@ -46,8 +46,8 @@ public static class AmazonS3Service
             ContentType = contentType
         };
 
-        var fileUrl = $"https://{_bucketName}.s3.amazonaws.com/cats/{keyName}";
-
+        var fileUrl = $"https://{_bucketName}.s3.{_awsRegion}.amazonaws.com/{keyName}";
+        
         var response = await s3Client.PutObjectAsync(putRequest);
         return (response, fileUrl);
     }
